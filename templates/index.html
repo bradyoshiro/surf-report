@@ -40,7 +40,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 16px;
-      padding: 24px 20px;
+      padding: 24px 20px 40px;
       max-width: 1200px;
       margin: 0 auto;
     }
@@ -95,95 +95,47 @@
     .detail-label { color: #5a8ab0; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
     .detail-value { color: #c8e6f8; margin-top: 1px; }
 
-    .error-msg { color: #e05050; font-size: 0.85rem; padding: 8px 0; }
-
-    /* Send Report Panel */
-    .notify-panel {
-      max-width: 540px;
-      margin: 0 auto 40px;
-      padding: 0 20px;
+    .tides {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #1e3d5c;
     }
-    .notify-box {
-      background: #0f2236;
-      border: 1px solid #1e3d5c;
-      border-radius: 12px;
-      padding: 22px;
-    }
-    .notify-box h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
-
-    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-    .tab {
-      flex: 1;
-      padding: 9px;
-      border-radius: 7px;
-      border: 1px solid #1e3d5c;
-      background: #0a1628;
-      color: #7ab8e8;
-      cursor: pointer;
-      font-size: 0.85rem;
-      text-align: center;
-    }
-    .tab.active { background: #1a4a7a; color: #fff; border-color: #2a6aaa; }
-
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 0.78rem; color: #5a8ab0; margin-bottom: 5px; }
-    .form-group input {
-      width: 100%;
-      background: #0a1628;
-      border: 1px solid #1e3d5c;
-      border-radius: 7px;
-      padding: 9px 12px;
-      color: #e8f4fd;
-      font-size: 0.9rem;
-    }
-    .form-group input:focus { outline: none; border-color: #2a6aaa; }
-
-    .spot-checkboxes {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      margin-bottom: 14px;
-    }
-    .spot-checkboxes label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.82rem;
-      cursor: pointer;
-      color: #c8e6f8;
-    }
-    .spot-checkboxes input[type=checkbox] { accent-color: #2a6aaa; }
-
-    #send-btn {
-      width: 100%;
-      background: #1a6bb5;
-      color: #fff;
-      border: none;
-      padding: 11px;
-      border-radius: 7px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-    #send-btn:hover { background: #2080d4; }
-    #send-btn:disabled { opacity: 0.5; cursor: default; }
-
-    #notify-result {
-      margin-top: 12px;
-      font-size: 0.85rem;
-      text-align: center;
-      min-height: 20px;
-    }
-    .result-ok  { color: #5dde87; }
-    .result-err { color: #e05050; }
-
-    .section-label {
+    .tides-label {
       font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
       color: #5a8ab0;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
+    .tide-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tide-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #0a1628;
+      border: 1px solid #1e3d5c;
+      border-radius: 8px;
+      padding: 5px 10px;
+      min-width: 70px;
+    }
+    .tide-type {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .tide-type.HIGH { color: #5ab4f5; }
+    .tide-type.LOW  { color: #f0a040; }
+    .tide-height { font-size: 0.9rem; font-weight: 700; color: #c8e6f8; }
+    .tide-time   { font-size: 0.68rem; color: #5a8ab0; margin-top: 1px; }
+
+    .no-tides { font-size: 0.8rem; color: #5a8ab0; }
+
+    .error-msg { color: #e05050; font-size: 0.85rem; padding: 8px 0; }
   </style>
 </head>
 <body>
@@ -196,7 +148,7 @@
 
 <div class="grid" id="conditions-grid">
   {% for c in conditions %}
-  <div class="card {% if c.error %}error{% endif %}" id="card-{{ loop.index }}">
+  <div class="card {% if c.error %}error{% endif %}">
     {% if c.error %}
       <div class="spot-name">{{ c.name }}</div>
       <div class="error-msg">Error: {{ c.error }}</div>
@@ -228,47 +180,39 @@
           <div class="detail-value">{{ c.swell_dir_label }}</div>
         </div>
       </div>
+      <div class="tides">
+        <div class="tides-label">Today's Tides</div>
+        <div class="tide-list">
+          {% if c.tides %}
+            {% for t in c.tides %}
+            <div class="tide-item">
+              <span class="tide-type {{ t.type }}">{{ t.type }}</span>
+              <span class="tide-height">{{ t.height }} ft</span>
+              <span class="tide-time">{{ t.time }}</span>
+            </div>
+            {% endfor %}
+          {% else %}
+            <span class="no-tides">No tide data</span>
+          {% endif %}
+        </div>
+      </div>
     {% endif %}
   </div>
   {% endfor %}
 </div>
 
-<!-- Notify Panel -->
-<div class="notify-panel">
-  <div class="notify-box">
-    <h2>Send Surf Report</h2>
-
-    <div class="form-group" id="input-group">
-      <label id="input-label">Phone Number</label>
-      <input type="text" id="target-input" placeholder="+18085551234">
-    </div>
-
-    <p class="section-label">Spots to include</p>
-    <div class="spot-checkboxes">
-      {% for name in conditions|map(attribute='name') %}
-      <label>
-        <input type="checkbox" class="spot-cb" value="{{ name }}" checked>
-        {{ name }}
-      </label>
-      {% endfor %}
-    </div>
-
-    <button id="send-btn" onclick="sendReport()">Send Report</button>
-    <div id="notify-result"></div>
-  </div>
-</div>
-
 <script>
-  let activeChannel = "sms";
-
   async function refreshData() {
     const btn = document.getElementById("refresh-btn");
     btn.disabled = true;
     btn.textContent = "Refreshing...";
     try {
-      const res = await fetch("/api/conditions?refresh=1");
+      const res = await fetch("/api/conditions");
       const data = await res.json();
       renderCards(data);
+      if (data.length) {
+        document.getElementById("last-updated").textContent = data[0].updated || "—";
+      }
     } catch (e) {
       alert("Refresh failed: " + e);
     }
@@ -278,6 +222,16 @@
 
   function ratingClass(key) {
     return "rating-" + (key || "FLAT");
+  }
+
+  function renderTides(tides) {
+    if (!tides || !tides.length) return '<span class="no-tides">No tide data</span>';
+    return tides.map(t => `
+      <div class="tide-item">
+        <span class="tide-type ${t.type}">${t.type}</span>
+        <span class="tide-height">${t.height} ft</span>
+        <span class="tide-time">${t.time}</span>
+      </div>`).join("");
   }
 
   function renderCards(conditions) {
@@ -317,41 +271,12 @@
             <div class="detail-value">${c.swell_dir_label}</div>
           </div>
         </div>
+        <div class="tides">
+          <div class="tides-label">Today's Tides</div>
+          <div class="tide-list">${renderTides(c.tides)}</div>
+        </div>
       </div>`;
     }).join("");
-  }
-
-  async function sendReport() {
-    const btn = document.getElementById("send-btn");
-    const result = document.getElementById("notify-result");
-    const target = document.getElementById("target-input").value.trim();
-    const spots = [...document.querySelectorAll(".spot-cb:checked")].map(cb => cb.value);
-
-    if (!target) { result.innerHTML = '<span class="result-err">Enter a phone number or username.</span>'; return; }
-    if (!spots.length) { result.innerHTML = '<span class="result-err">Select at least one spot.</span>'; return; }
-
-    btn.disabled = true;
-    btn.textContent = "Sending...";
-    result.innerHTML = "";
-
-    try {
-      const res = await fetch("/api/notify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ channel: activeChannel, target, spots }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        result.innerHTML = '<span class="result-ok">Sent successfully!</span>';
-      } else {
-        result.innerHTML = `<span class="result-err">Failed: ${data.error}</span>`;
-      }
-    } catch (e) {
-      result.innerHTML = `<span class="result-err">Error: ${e}</span>`;
-    }
-
-    btn.disabled = false;
-    btn.textContent = "Send Report";
   }
 </script>
 </body>

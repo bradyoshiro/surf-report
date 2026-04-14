@@ -60,6 +60,26 @@ def _closest_now(entries, key=None):
     return best[key] if key else best
 
 
+def _fetch_tides(spot_id):
+    """Return today's HIGH/LOW tide entries sorted by time."""
+    try:
+        data = _get("tides", spot_id, days=2)["data"]["tides"]
+        today = datetime.now().strftime("%Y-%m-%d")
+        tides = []
+        for t in data:
+            if t.get("type") in ("HIGH", "LOW"):
+                dt = datetime.fromtimestamp(t["timestamp"])
+                if dt.strftime("%Y-%m-%d") == today:
+                    tides.append({
+                        "type":   t["type"],
+                        "height": round(t["height"], 1),
+                        "time":   dt.strftime("%I:%M %p").lstrip("0"),
+                    })
+        return sorted(tides, key=lambda x: x["time"])
+    except Exception:
+        return []
+
+
 def fetch_spot(name, spot_id):
     try:
         wave_data   = _get("wave",   spot_id)["data"]["wave"]
@@ -72,6 +92,7 @@ def fetch_spot(name, spot_id):
 
         surf = wave.get("surf", {})
         swell_primary = wave.get("swells", [{}])[0]
+        tides = _fetch_tides(spot_id)
 
         return {
             "name": name,
@@ -93,6 +114,7 @@ def fetch_spot(name, spot_id):
                 rating.get("rating", {}).get("key", "FLAT"), "—"
             ),
             "rating_value": rating.get("rating", {}).get("value", 0),
+            "tides": tides,
             "error": None,
         }
     except Exception as e:
