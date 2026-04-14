@@ -22,3 +22,4 @@ TWILIO_FROM_NUMBER  = os.environ.get("TWILIO_FROM_NUMBER", "")  # e.g. +18001234
 MANYCHAT_API_KEY    = os.environ.get("MANYCHAT_API_KEY", "")
 
 PORT = int(os.environ.get("PORT", 5055))
+PUSH_SECRET = os.environ.get("PUSH_SECRET", "changeme")

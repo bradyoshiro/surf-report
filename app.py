@@ -1,24 +1,20 @@
 from flask import Flask, render_template, jsonify, request
 from surfline import fetch_all, format_report
 from notify import send_sms, send_instagram_dm_by_username
-from config import SPOTS, PORT
+from config import SPOTS, PORT, PUSH_SECRET
 import threading
 import time
+import os
 
 app = Flask(__name__)
 
-# Simple in-memory cache: refresh every 15 minutes
+# Cache — populated either by Mac push or direct fetch fallback
 _cache = {"data": [], "ts": 0}
 _cache_lock = threading.Lock()
-CACHE_TTL = 900  # seconds
 
 
-def get_conditions(force=False):
-    now = time.time()
+def get_conditions():
     with _cache_lock:
-        if force or now - _cache["ts"] > CACHE_TTL or not _cache["data"]:
-            _cache["data"] = fetch_all(SPOTS)
-            _cache["ts"] = now
         return _cache["data"]
 
 
@@ -30,27 +26,42 @@ def index():
 
 @app.route("/api/conditions")
 def api_conditions():
-    force = request.args.get("refresh") == "1"
-    conditions = get_conditions(force=force)
-    return jsonify(conditions)
+    return jsonify(get_conditions())
+
+
+# Mac pushes fresh data here every 30 min
+@app.route("/api/update", methods=["POST"])
+def api_update():
+    secret = request.headers.get("X-Push-Secret", "")
+    if secret != PUSH_SECRET:
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+    data = request.get_json(force=True)
+    if not isinstance(data, list):
+        return jsonify({"ok": False, "error": "expected list"}), 400
+    with _cache_lock:
+        _cache["data"] = data
+        _cache["ts"] = time.time()
+    return jsonify({"ok": True, "spots": len(data)})
 
 
 @app.route("/api/notify", methods=["POST"])
 def api_notify():
     body = request.get_json(force=True)
-    channel = body.get("channel")          # "sms" or "instagram"
-    target  = body.get("target", "").strip()  # phone number or @username
-    spots   = body.get("spots", list(SPOTS.keys()))  # optional filter
+    channel = body.get("channel")
+    target  = body.get("target", "").strip()
+    spots   = body.get("spots", list(SPOTS.keys()))
 
     if not channel or not target:
         return jsonify({"ok": False, "error": "channel and target required"}), 400
 
     conditions = get_conditions()
+    if not conditions:
+        return jsonify({"ok": False, "error": "No data yet — Mac push pending"}), 503
+
     filtered = [c for c in conditions if c["name"] in spots]
     message = format_report(filtered)
 
     if channel == "sms":
-        # Normalize to E.164 if needed
         number = target if target.startswith("+") else f"+1{target.replace('-','').replace(' ','')}"
         result = send_sms(number, message)
     elif channel == "instagram":
@@ -62,8 +73,5 @@ def api_notify():
 
 
 if __name__ == "__main__":
-    # Pre-warm cache on startup
-    print("Fetching initial conditions...")
-    get_conditions(force=True)
     print(f"Starting surf report server on http://localhost:{PORT}")
     app.run(host="0.0.0.0", port=PORT, debug=False)
