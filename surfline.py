@@ -1,11 +1,29 @@
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from datetime import datetime, timezone
+
+_session = requests.Session()
+_session.headers.update({})
+_adapter = HTTPAdapter(max_retries=Retry(total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503]))
+_session.mount("https://", _adapter)
 
 BASE = "https://services.surfline.com/kbyg/spots/forecasts"
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     "Referer": "https://www.surfline.com/",
+    "Origin": "https://www.surfline.com",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-site",
+    "sec-ch-ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"macOS"',
 }
 
 _COMPASS = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"]
@@ -31,7 +49,7 @@ RATING_LABELS = {
 
 def _get(endpoint, spot_id, days=1):
     params = {"spotId": spot_id, "days": days, "intervalHours": 1}
-    r = requests.get(f"{BASE}/{endpoint}", params=params, headers=HEADERS, timeout=10)
+    r = _session.get(f"{BASE}/{endpoint}", params=params, headers=HEADERS, timeout=10)
     r.raise_for_status()
     return r.json()
 
