@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()  # loads .env locally; no-op on Render (uses env vars directly)
 
 SPOTS = {
     "Pipeline":       "5842041f4e65fad6a7708890",
