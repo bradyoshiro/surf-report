@@ -147,6 +147,13 @@
 </header>
 
 <div class="grid" id="conditions-grid">
+  {% if not conditions %}
+  <div style="grid-column:1/-1; text-align:center; padding:60px 20px; color:#5a8ab0;">
+    <div style="font-size:2.5rem; margin-bottom:16px;">🌊</div>
+    <div style="font-size:1.1rem; font-weight:600; color:#7ab8e8; margin-bottom:8px;">Waiting for surf data…</div>
+    <div style="font-size:0.85rem;">The Mac Mini pushes fresh conditions every 2 hours.<br>Check back shortly or hit Refresh.</div>
+  </div>
+  {% endif %}
   {% for c in conditions %}
   <div class="card {% if c.error %}error{% endif %}">
     {% if c.error %}
