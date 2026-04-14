@@ -1,3 +1,4 @@
+import json
 from flask import Flask, render_template, jsonify, request
 from surfline import fetch_all, format_report
 from notify import send_sms, send_instagram_dm_by_username
@@ -8,14 +9,36 @@ import os
 
 app = Flask(__name__)
 
-# Cache — populated either by Mac push or direct fetch fallback
+# Cache — populated by Mac push, persisted to disk to survive restarts
+_CACHE_FILE = os.path.join(os.path.dirname(__file__), "surf_cache.json")
 _cache = {"data": [], "ts": 0}
 _cache_lock = threading.Lock()
+
+
+def _load_cache():
+    try:
+        with open(_CACHE_FILE, "r") as f:
+            saved = json.load(f)
+            _cache["data"] = saved.get("data", [])
+            _cache["ts"]   = saved.get("ts", 0)
+    except Exception:
+        pass
+
+
+def _save_cache():
+    try:
+        with open(_CACHE_FILE, "w") as f:
+            json.dump({"data": _cache["data"], "ts": _cache["ts"]}, f)
+    except Exception:
+        pass
 
 
 def get_conditions():
     with _cache_lock:
         return _cache["data"]
+
+
+_load_cache()
 
 
 @app.route("/")
@@ -41,6 +64,7 @@ def api_update():
     with _cache_lock:
         _cache["data"] = data
         _cache["ts"] = time.time()
+        _save_cache()
     return jsonify({"ok": True, "spots": len(data)})
 
 
