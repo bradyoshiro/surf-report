@@ -238,11 +238,6 @@
   <div class="notify-box">
     <h2>Send Surf Report</h2>
 
-    <div class="tabs">
-      <div class="tab active" id="tab-sms" onclick="setTab('sms')">SMS</div>
-      <div class="tab" id="tab-instagram" onclick="setTab('instagram')">Instagram DM</div>
-    </div>
-
     <div class="form-group" id="input-group">
       <label id="input-label">Phone Number</label>
       <input type="text" id="target-input" placeholder="+18085551234">
@@ -265,19 +260,6 @@
 
 <script>
   let activeChannel = "sms";
-
-  function setTab(channel) {
-    activeChannel = channel;
-    document.getElementById("tab-sms").classList.toggle("active", channel === "sms");
-    document.getElementById("tab-instagram").classList.toggle("active", channel === "instagram");
-    if (channel === "sms") {
-      document.getElementById("input-label").textContent = "Phone Number";
-      document.getElementById("target-input").placeholder = "+18085551234";
-    } else {
-      document.getElementById("input-label").textContent = "Instagram Username";
-      document.getElementById("target-input").placeholder = "@username";
-    }
-  }
 
   async function refreshData() {
     const btn = document.getElementById("refresh-btn");
